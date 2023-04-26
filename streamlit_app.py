@@ -1,38 +1,45 @@
-from collections import namedtuple
-import altair as alt
-import math
-import pandas as pd
 import streamlit as st
+import requests
 
-"""
-# Welcome to Streamlit!
+# Set up API endpoint and headers
+endpoint = "https://api.openai.com/v1/chat/completions"
+headers = {
+    "Authorization": f"Bearer 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",
+    "Content-Type": "application/json"
+}
 
-Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:
+# Define function to make API request
+def generate_chat_response(messages):
+    data = {
+        "messages": messages
+    }
+    response = requests.post(endpoint, headers=headers, json=data)
+    if response.status_code == 200:
+        assistant_reply = response.json()['choices'][0]['message']['content']
+        return assistant_reply
+    else:
+        st.warning("Failed to generate chat response. Please try again.")
+        return None
 
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
+# Streamlit app
+def main():
+    st.title("ChatGPT Web Chat")
 
-In the meantime, below is an example of what you can do with just a few lines of code:
-"""
+    # Input form for user messages
+    user_message = st.text_input("You:", key="user_message")
+    user_messages = []
 
+    # Add user message to data frame
+    if st.button("Send"):
+        if user_message:
+            user_messages.append({"role": "user", "content": user_message})
+            st.text("User: " + user_message)
 
-with st.echo(code_location='below'):
-    total_points = st.slider("Number of points in spiral", 1, 5000, 2000)
-    num_turns = st.slider("Number of turns in spiral", 1, 100, 9)
+    # Generate assistant reply and display in the chat window
+    assistant_reply = generate_chat_response(user_messages)
+    if assistant_reply:
+        user_messages.append({"role": "assistant", "content": assistant_reply})
+        st.text("Assistant: " + assistant_reply)
 
-    Point = namedtuple('Point', 'x y')
-    data = []
-
-    points_per_turn = total_points / num_turns
-
-    for curr_point_num in range(total_points):
-        curr_turn, i = divmod(curr_point_num, points_per_turn)
-        angle = (curr_turn + 1) * 2 * math.pi * i / points_per_turn
-        radius = curr_point_num / total_points
-        x = radius * math.cos(angle)
-        y = radius * math.sin(angle)
-        data.append(Point(x, y))
-
-    st.altair_chart(alt.Chart(pd.DataFrame(data), height=500, width=500)
-        .mark_circle(color='#0068c9', opacity=0.5)
-        .encode(x='x:Q', y='y:Q'))
+if __name__ == "__main__":
+    main()

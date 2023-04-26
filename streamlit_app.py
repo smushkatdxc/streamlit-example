@@ -4,7 +4,7 @@ import requests
 # Set up API endpoint and headers
 endpoint = "https://api.openai.com/v1/chat/completions"
 headers = {
-    "Authorization": f"Bearer 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",
+    "Authorization": f"Bearer ",
     "Content-Type": "application/json"
 }
 
